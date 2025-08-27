@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notas-service
+spec:
+  selector:
+    app: notas-api
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 5000        # puerto dentro del cluster
+      targetPort: 5000  # puerto en el contenedor (Flask escucha aquí)
+      nodePort: 31341   # puerto expuesto en tu host
+
+
