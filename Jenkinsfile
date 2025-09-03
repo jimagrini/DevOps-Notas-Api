@@ -1,16 +1,11 @@
 pipeline {
-    agent {
-        docker {
-            image 'bitnami/kubectl:latest'  
-            args '-v /var/run/docker.sock:/var/run/docker.sock' 
-        }
-    }
+    agent any
 
     environment {
         REGISTRY = "docker.io/jimagrini"
         IMAGE_NAME = "notas"
-        KUBECONFIG = credentials('kubeconfig-cred')
-        DOCKER_CREDENTIALS = credentials('dockerhub-cred')
+        KUBECONFIG = credentials('kubeconfig-cred')        // credencial en Jenkins
+        DOCKER_CREDENTIALS = credentials('dockerhub-cred') // usuario/pass dockerhub
     }
 
     stages {
@@ -22,7 +17,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} ."
+                script {
+                    sh """
+                        docker build -t $REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} .
+                    """
+                }
             }
         }
 
@@ -34,20 +33,26 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                sh """
-                echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
-                docker push $REGISTRY/$IMAGE_NAME:${BUILD_NUMBER}
-                docker logout
-                """
+                script {
+                    sh """
+                        echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
+                        docker push $REGISTRY/$IMAGE_NAME:${BUILD_NUMBER}
+                        docker logout
+                    """
+                }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh """
-                kubectl --kubeconfig=${KUBECONFIG} set image deployment/notas-deployment notas=$REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} --record
-                kubectl --kubeconfig=${KUBECONFIG} rollout status deployment/notas-deployment
-                """
+                script {
+                    sh """
+                        echo "$KUBECONFIG" > kubeconfig.yaml
+                        export KUBECONFIG=\$(pwd)/kubeconfig.yaml
+                        kubectl set image deployment/notas-deployment notas=$REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} --record
+                        kubectl rollout status deployment/notas-deployment
+                    """
+                }
             }
         }
     }
