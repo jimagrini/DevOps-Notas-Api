@@ -1,12 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            // Imagen ligera que trae kubectl
-            image 'lachlanevenson/k8s-kubectl:latest'
-            // Montamos el socket de Docker para que pueda usar "docker build" y "docker push"
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
         REGISTRY = "docker.io/jimagrini"
@@ -25,12 +18,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} ."
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh "echo 'No hay tests definidos, skipping...'"
             }
         }
 
@@ -53,15 +40,6 @@ pipeline {
                     kubectl rollout status deployment/notas-deployment
                 """
             }
-        }
-    }
-
-    post {
-        failure {
-            echo "Pipeline failed 🚨"
-        }
-        success {
-            echo "Pipeline executed successfully ✅"
         }
     }
 }
