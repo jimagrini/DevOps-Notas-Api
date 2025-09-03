@@ -48,7 +48,7 @@ pipeline {
             steps {
                 sh """
                     echo "$KUBECONFIG" > kubeconfig.yaml
-                    export KUBECONFIG=$(pwd)/kubeconfig.yaml
+                    export KUBECONFIG=\$(pwd)/kubeconfig.yaml
                     kubectl set image deployment/notas-deployment notas=$REGISTRY/$IMAGE_NAME:${BUILD_NUMBER} --record
                     kubectl rollout status deployment/notas-deployment
                 """
