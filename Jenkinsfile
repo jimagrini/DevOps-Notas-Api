@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "docker.io/jimagrini"
+        REGISTRY = "docker.io/jimagrini"   // cambia si usas otro registry
         IMAGE_NAME = "notas"
-        KUBECONFIG = credentials('kubeconfig-cred') 
-        DOCKER_CREDENTIALS = credentials('dockerhub-cred') 
+        KUBECONFIG = credentials('kubeconfig-cred') // credencial de Jenkins con kubeconfig
+        DOCKER_CREDENTIALS = credentials('dockerhub-cred') // usuario y pass de dockerhub
     }
 
     stages {
@@ -27,7 +27,10 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh "echo 'No hay tests definidos, skipping...'"
+                script {
+                    // si tienes tests con pytest u otro, agrégalo aquí
+                    sh "echo 'No hay tests definidos, skipping...'"
+                }
             }
         }
 
@@ -35,9 +38,22 @@ pipeline {
             steps {
                 script {
                     sh """
-                    echo \$DOCKER_CREDENTIALS_PSW | docker login -u \$DOCKER_CREDENTIALS_USR --password-stdin
+                    echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
                     docker push $REGISTRY/$IMAGE_NAME:\$BUILD_NUMBER
                     docker logout
+                    """
+                }
+            }
+        }
+
+        stage('Install kubectl') {
+            steps {
+                script {
+                    sh """
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    mv kubectl /usr/local/bin/
+                    kubectl version --client
                     """
                 }
             }
