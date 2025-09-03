@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "docker.io/jimagrini"   // cambia si usas otro registry
+        REGISTRY = "docker.io/jimagrini"
         IMAGE_NAME = "notas"
-        KUBECONFIG = credentials('kubeconfig-cred') // credencial de Jenkins con kubeconfig
-        DOCKER_CREDENTIALS = credentials('dockerhub-cred') // usuario y pass de dockerhub
+        KUBECONFIG = credentials('kubeconfig-cred') 
+        DOCKER_CREDENTIALS = credentials('dockerhub-cred') 
     }
 
     stages {
@@ -27,10 +27,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                script {
-                    // si tienes tests con pytest u otro, agrégalo aquí
-                    sh "echo 'No hay tests definidos, skipping...'"
-                }
+                sh "echo 'No hay tests definidos, skipping...'"
             }
         }
 
@@ -38,7 +35,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
+                    echo \$DOCKER_CREDENTIALS_PSW | docker login -u \$DOCKER_CREDENTIALS_USR --password-stdin
                     docker push $REGISTRY/$IMAGE_NAME:\$BUILD_NUMBER
                     docker logout
                     """
