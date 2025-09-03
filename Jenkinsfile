@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'jimagrini/jenkins-docker-kubectl:latest' // tu imagen personalizada
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         REGISTRY = "docker.io/jimagrini"
@@ -40,6 +45,15 @@ pipeline {
                     kubectl rollout status deployment/notas-deployment
                 """
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline ejecutada correctamente ✅"
+        }
+        failure {
+            echo "Pipeline falló 🚨"
         }
     }
 }
